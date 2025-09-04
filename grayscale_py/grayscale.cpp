@@ -1,9 +1,15 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+
+// Enable stb_image and stb_image_write implementation in this file
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
 #include "stb_image_write.h"
+
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 namespace py = pybind11;
 
@@ -13,7 +19,7 @@ py::array_t<unsigned char> rgb_to_grayscale(const std::string &filename)
     int width, height, channels;
     unsigned char *img = stbi_load(filename.c_str(), &width, &height, &channels, 3);
     if (!img)
-        throw std::runtime_error("Failed to load image!");
+        throw std::runtime_error("Failed to load image: " + filename);
 
     std::vector<unsigned char> gray(width * height);
 
@@ -35,11 +41,15 @@ py::array_t<unsigned char> rgb_to_grayscale(const std::string &filename)
 void save_grayscale(const py::array_t<unsigned char> &gray, const std::string &filename)
 {
     auto buf = gray.request();
+    if (buf.ndim != 2)
+        throw std::runtime_error("Input array must be 2D (H x W)");
+
     int height = buf.shape[0];
     int width = buf.shape[1];
     unsigned char *data = static_cast<unsigned char *>(buf.ptr);
 
-    stbi_write_png(filename.c_str(), width, height, 1, data, width);
+    if (!stbi_write_png(filename.c_str(), width, height, 1, data, width))
+        throw std::runtime_error("Failed to write image: " + filename);
 }
 
 // Python bindings
