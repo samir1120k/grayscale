@@ -1,9 +1,3 @@
-
----
-
-This builds wheels for Windows/Linux/macOS using **cibuildwheel** and uploads to PyPI.
-
-```yaml
 name: Build and Upload to PyPI
 
 on:
@@ -22,7 +16,7 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install cibuildwheel
+      - name: Install build tools
         run: pip install cibuildwheel twine build
 
       - name: Build wheels
